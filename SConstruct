@@ -49,7 +49,7 @@ gme_sources = [
 
 gme_objects = [
     gme_env.SharedObject(
-        "game-music-emu/build/{}{}".format(os.path.splitext(src[len(GME_DIR) + 1:])[0], env["suffix"]),
+        "game-music-emu/build/obj/{}{}".format(os.path.splitext(src[len(GME_DIR) + 1:])[0], env["suffix"]),
         src,
     )
     for src in gme_sources
