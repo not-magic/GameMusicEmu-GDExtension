@@ -14,7 +14,7 @@ struct Music_Emu;
 namespace godot {
 
 class AudioStreamGME : public AudioStream {
-	GDCLASS(AudioStreamGME, AudioStream)
+	GDCLASS(AudioStreamGME, AudioStream) // NOLINT
 
 public:
 	enum Format {
@@ -62,7 +62,7 @@ public:
 };
 
 class AudioStreamPlaybackGME : public AudioStreamPlaybackResampled {
-	GDCLASS(AudioStreamPlaybackGME, AudioStreamPlaybackResampled)
+	GDCLASS(AudioStreamPlaybackGME, AudioStreamPlaybackResampled) // NOLINT
 
 	friend class AudioStreamGME;
 

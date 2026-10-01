@@ -5,7 +5,7 @@
 namespace godot {
 
 class ResourceFormatLoaderGME : public ResourceFormatLoader {
-	GDCLASS(ResourceFormatLoaderGME, ResourceFormatLoader)
+	GDCLASS(ResourceFormatLoaderGME, ResourceFormatLoader) // NOLINT
 
 protected:
 	static void _bind_methods() {}

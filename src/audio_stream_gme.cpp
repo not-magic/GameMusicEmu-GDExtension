@@ -12,7 +12,6 @@
 #include <gme/Sap_Emu.h>
 #include <gme/Spc_Emu.h>
 #include <gme/Vgm_Emu.h>
-
 #include <godot_cpp/classes/audio_server.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
