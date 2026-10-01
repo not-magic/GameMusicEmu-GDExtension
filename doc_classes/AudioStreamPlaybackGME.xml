@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="AudioStreamPlaybackGME" inherits="AudioStreamPlaybackResampled" api_type="extension" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Playback of an [AudioStreamGME].
+	</brief_description>
+	<description>
+		Owns the emulator for one playing instance. Its properties are what an [AudioStreamPlayer] sets through [code]parameters/track_index[/code] and [code]parameters/looping[/code]. They can also be set directly on a playback, and track changes apply while playing.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+		<member name="looping" type="bool" setter="set_looping" getter="is_looping" default="true">
+			If [code]true[/code], the track restarts when it ends.
+		</member>
+		<member name="track_index" type="int" setter="set_track_index" getter="get_track_index" default="0">
+			Zero-based index of the track to play.
+		</member>
+	</members>
+</class>

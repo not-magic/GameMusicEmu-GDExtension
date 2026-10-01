@@ -5,9 +5,9 @@
 *.o
 
 # Built extension binaries
-project/addons/starter_template/bin/*.so
-project/addons/starter_template/bin/*.dylib
-project/addons/starter_template/bin/*.dll
+project/addons/game_music_emu/bin/*.so
+project/addons/game_music_emu/bin/*.dylib
+project/addons/game_music_emu/bin/*.dll
 
 # Test binaries
 tests/bin/
@@ -28,3 +28,23 @@ project/icon.svg.import
 
 # Sublime local stuff
 *.sublime-workspace
+# Game Music Emu static library build output
+game-music-emu/build/
+
+# Test music files (only .nsf and .vgm are tracked)
+project/*.nsfe
+project/*.nsfe.uid
+project/*.gbs
+project/*.gbs.uid
+project/*.spc
+project/*.spc.uid
+project/*.gym
+project/*.gym.uid
+project/*.hes
+project/*.hes.uid
+project/*.kss
+project/*.kss.uid
+project/*.sap
+project/*.sap.uid
+project/*.ay
+project/*.ay.uid

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="AudioStreamGME" inherits="AudioStream" api_type="extension" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/godotengine/godot/master/doc/class.xsd">
+	<brief_description>
+		Plays a game music file (NSF, NSFE, GBS, SPC, VGM, GYM, HES, KSS, SAP or AY) through Game Music Emu.
+	</brief_description>
+	<description>
+		Game music files are imported as this stream automatically, with [member format] chosen from the file extension. The stream only holds the file and its metadata. The track to play and looping are set per player through [code]parameters/track_index[/code] and [code]parameters/looping[/code] on an [AudioStreamPlayer]. Each playback instance has its own emulator, so one stream can be played by several players at once.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_track_length" qualifiers="const">
+			<return type="float" />
+			<param index="0" name="track_index" type="int" />
+			<description>
+				Returns the play length of the given track in seconds. Uses the file's length data when present, otherwise intro plus two loops, otherwise 150 seconds.
+			</description>
+		</method>
+		<method name="get_track_title" qualifiers="const">
+			<return type="String" />
+			<param index="0" name="track_index" type="int" />
+			<description>
+				Returns the title of the given track, or an empty string if the file has none.
+			</description>
+		</method>
+		<method name="get_track_titles" qualifiers="const">
+			<return type="PackedStringArray" />
+			<description>
+				Returns the titles of all tracks. Tracks without a title give an empty string.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="author" type="String" setter="" getter="get_author" default="&quot;&quot;">
+			The author stored in the file. Read-only.
+		</member>
+		<member name="copyright" type="String" setter="" getter="get_copyright" default="&quot;&quot;">
+			The copyright string stored in the file. Read-only.
+		</member>
+		<member name="data" type="PackedByteArray" setter="set_data" getter="get_data" default="PackedByteArray()">
+			The raw contents of the music file.
+		</member>
+		<member name="format" type="int" setter="set_format" getter="get_format" enum="AudioStreamGME.Format" default="0">
+			The file format, which selects the emulator.
+		</member>
+		<member name="game" type="String" setter="" getter="get_game" default="&quot;&quot;">
+			The game title stored in the file. Read-only.
+		</member>
+		<member name="track_count" type="int" setter="" getter="get_track_count" default="0">
+			The number of tracks in the file. Read-only.
+		</member>
+	</members>
+	<constants>
+		<constant name="FORMAT_NSF" value="0" enum="Format">
+			NSF file.
+		</constant>
+		<constant name="FORMAT_NSFE" value="1" enum="Format">
+			NSFE file.
+		</constant>
+		<constant name="FORMAT_GBS" value="2" enum="Format">
+			GBS file.
+		</constant>
+		<constant name="FORMAT_SPC" value="3" enum="Format">
+			SPC file.
+		</constant>
+		<constant name="FORMAT_VGM" value="4" enum="Format">
+			VGM file.
+		</constant>
+		<constant name="FORMAT_GYM" value="5" enum="Format">
+			GYM file.
+		</constant>
+		<constant name="FORMAT_HES" value="6" enum="Format">
+			HES file.
+		</constant>
+		<constant name="FORMAT_KSS" value="7" enum="Format">
+			KSS file.
+		</constant>
+		<constant name="FORMAT_SAP" value="8" enum="Format">
+			SAP file.
+		</constant>
+		<constant name="FORMAT_AY" value="9" enum="Format">
+			AY file.
+		</constant>
+	</constants>
+</class>

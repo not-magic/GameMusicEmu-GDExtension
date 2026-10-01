@@ -1,9 +1,9 @@
 name: Release
 
 # Builds template_debug + template_release for linux/windows/macos, then
-# packages project/addons/starter_template/ (source-free, binaries for every
+# packages project/addons/game_music_emu/ (source-free, binaries for every
 # platform included) into a zip attached to a GitHub Release. The zip's
-# internal layout is addons/starter_template/..., so it extracts directly
+# internal layout is addons/game_music_emu/..., so it extracts directly
 # into a project's root (res://). That zip is what's meant to be
 # distributed -- either linked directly, or used as the "Custom" download
 # URL in a Godot Asset Library submission, since the Asset Library's
@@ -81,11 +81,11 @@ jobs:
       - name: Upload binaries
         uses: actions/upload-artifact@v7
         with:
-          name: starter-template-bin-${{ matrix.platform }}
+          name: game-music-emu-bin-${{ matrix.platform }}
           path: |
-            project/addons/starter_template/bin/*.so
-            project/addons/starter_template/bin/*.dll
-            project/addons/starter_template/bin/*.dylib
+            project/addons/game_music_emu/bin/*.so
+            project/addons/game_music_emu/bin/*.dll
+            project/addons/game_music_emu/bin/*.dylib
 
   package:
     name: Package addon
@@ -99,19 +99,19 @@ jobs:
       - name: Download binaries for every platform
         uses: actions/download-artifact@v8
         with:
-          pattern: starter-template-bin-*
-          path: project/addons/starter_template/bin
+          pattern: game-music-emu-bin-*
+          path: project/addons/game_music_emu/bin
           merge-multiple: true
 
       - name: Zip addon
         run: |
-          cp LICENSE project/addons/starter_template/LICENSE
+          cp LICENSE project/addons/game_music_emu/LICENSE
           cd project
-          zip -r "${{ github.workspace }}/StarterTemplate.zip" addons/starter_template
+          zip -r "${{ github.workspace }}/GameMusicEmu.zip" addons/game_music_emu
 
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          files: StarterTemplate.zip
+          files: GameMusicEmu.zip
           generate_release_notes: true

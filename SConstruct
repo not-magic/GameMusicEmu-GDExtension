@@ -5,7 +5,7 @@ import sys
 # You can find documentation for SCons and SConstruct files at:
 # https://scons.org/documentation.html
 
-ADDON_NAME = 'starter_template'
+ADDON_NAME = 'game_music_emu'
 
 
 # This lets SCons know that we're using godot-cpp, from the godot-cpp folder.
@@ -13,6 +13,51 @@ env = SConscript("godot-cpp/SConstruct")
 
 # Configures the 'src' directory as a source for header files.
 env.Append(CPPPATH=["src/"])
+
+# Game Music Emu (game-music-emu/ submodule), built as a static library from
+# the same source list as gme/CMakeLists.txt with every emulator enabled
+# (see gme/gme_types.h), the Nuked YM2612 core, and no zlib (so no VGZ).
+GME_DIR = "game-music-emu/gme"
+env.Append(CPPPATH=["game-music-emu/"])
+# Every Godot target is little-endian; gme headers require it to be stated.
+# VGM_YM2612_NUKED must be defined for both the library and its users.
+env.Append(CPPDEFINES=[("BLARGG_LITTLE_ENDIAN", 1), "VGM_YM2612_NUKED"])
+
+gme_env = env.Clone()
+gme_env.Append(CPPPATH=[GME_DIR])
+if env.get("is_msvc", False):
+    gme_env.Append(CPPDEFINES=["_CRT_SECURE_NO_WARNINGS"])
+
+gme_sources = [
+    GME_DIR + "/" + name
+    for name in [
+        "Ay_Apu.cpp", "Ay_Cpu.cpp", "Ay_Emu.cpp",
+        "Blip_Buffer.cpp", "Classic_Emu.cpp", "Data_Reader.cpp", "Dual_Resampler.cpp",
+        "Effects_Buffer.cpp", "Fir_Resampler.cpp", "Gb_Apu.cpp", "Gb_Cpu.cpp", "Gb_Oscs.cpp",
+        "Gbs_Emu.cpp", "gme.cpp", "Gme_File.cpp", "Gym_Emu.cpp",
+        "Hes_Apu.cpp", "Hes_Apu_Adpcm.cpp", "Hes_Cpu.cpp", "Hes_Emu.cpp",
+        "Kss_Cpu.cpp", "Kss_Emu.cpp", "Kss_Scc_Apu.cpp", "M3u_Playlist.cpp",
+        "Multi_Buffer.cpp", "Music_Emu.cpp",
+        "Nes_Apu.cpp", "Nes_Cpu.cpp", "Nes_Fds_Apu.cpp", "Nes_Fme7_Apu.cpp",
+        "Nes_Namco_Apu.cpp", "Nes_Oscs.cpp", "Nes_Vrc6_Apu.cpp", "Nes_Vrc7_Apu.cpp",
+        "Nsf_Emu.cpp", "Nsfe_Emu.cpp", "ext/emu2413.c",
+        "Sap_Apu.cpp", "Sap_Cpu.cpp", "Sap_Emu.cpp", "Sms_Apu.cpp",
+        "Snes_Spc.cpp", "Spc_Cpu.cpp", "Spc_Dsp.cpp", "Spc_Emu.cpp", "Spc_Filter.cpp",
+        "Vgm_Emu.cpp", "Vgm_Emu_Impl.cpp", "Ym2413_Emu.cpp", "Ym2612_Nuked.cpp",
+    ]
+]
+
+gme_objects = [
+    gme_env.SharedObject(
+        "game-music-emu/build/{}{}".format(os.path.splitext(src[len(GME_DIR) + 1:])[0], env["suffix"]),
+        src,
+    )
+    for src in gme_sources
+]
+gme_library = gme_env.StaticLibrary(
+    "game-music-emu/build/gme{}".format(env["suffix"]),
+    source=gme_objects,
+)
 
 # Collects all .cpp files in the 'src' folder as compile targets.
 sources = Glob("src/*.cpp")
@@ -36,6 +81,7 @@ lib_filename = "{}{}{}{}".format(env.subst('$SHLIBPREFIX'), ADDON_NAME, env["suf
 library = env.SharedLibrary(
     "project/addons/{}/bin/{}".format(ADDON_NAME, lib_filename),
     source=sources,
+    LIBS=env.get("LIBS", []) + [gme_library],
 )
 
 # Selects the shared library as the default target.
