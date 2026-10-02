@@ -1,6 +1,6 @@
 name: Release
 
-# Builds template_debug + template_release for linux/windows/macos, then
+# Builds template_debug + template_release for linux/windows/macos/android/ios (arm64)/web, then
 # packages project/addons/game_music_emu/ (source-free, binaries for every
 # platform included) into a zip attached to a GitHub Release. The zip's
 # internal layout is addons/game_music_emu/..., so it extracts directly
@@ -24,18 +24,40 @@ permissions:
 
 jobs:
   build:
-    name: ${{ matrix.platform }}
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: linux
+          - name: linux
+            platform: linux
             os: ubuntu-latest
-          - platform: windows
+            args: ""
+          - name: windows
+            platform: windows
             os: windows-latest
-          - platform: macos
+            args: ""
+          - name: macos
+            platform: macos
             os: macos-latest
+            args: ""
+          - name: android-arm64
+            platform: android
+            os: ubuntu-latest
+            args: arch=arm64
+          - name: ios
+            platform: ios
+            os: macos-latest
+            args: arch=arm64
+          - name: web
+            platform: web
+            os: ubuntu-latest
+            args: ""
+          - name: web-nothreads
+            platform: web
+            os: ubuntu-latest
+            args: threads=no
     steps:
       - uses: actions/checkout@v7
         with:
@@ -49,6 +71,18 @@ jobs:
       - name: Install SCons
         run: pip install scons
 
+      - name: Install Emscripten
+        if: matrix.platform == 'web'
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 4.0.11
+
+      - name: Install Android NDK
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.1.13356709"
+
       # Pinned godot-cpp commit, so bumping the submodule invalidates the
       # cache key too.
       - name: Get submodule revisions
@@ -60,9 +94,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: .scons_cache
-          key: scons-release-${{ matrix.platform }}-${{ hashFiles('src/**', 'SConstruct') }}-${{ steps.submodules.outputs.hash }}
+          key: scons-release-${{ matrix.name }}-${{ hashFiles('src/**', 'SConstruct') }}-${{ steps.submodules.outputs.hash }}
           restore-keys: |
-            scons-release-${{ matrix.platform }}-
+            scons-release-${{ matrix.name }}-
 
       # Runs the standalone (no godot-cpp) test in tests/ against template_debug
       # as a sanity check before spending time on the release build.
@@ -70,22 +104,35 @@ jobs:
         env:
           SCONS_CACHE: ${{ github.workspace }}/.scons_cache
         run: |
-          scons platform=${{ matrix.platform }} target=template_debug
+          scons platform=${{ matrix.platform }} ${{ matrix.args }} target=template_debug
           scons tests
 
       - name: Build template_release
         env:
           SCONS_CACHE: ${{ github.workspace }}/.scons_cache
-        run: scons platform=${{ matrix.platform }} target=template_release
+        run: scons platform=${{ matrix.platform }} ${{ matrix.args }} target=template_release
+
+      - name: Wrap iOS dylibs in xcframeworks
+        if: matrix.platform == 'ios'
+        working-directory: project/addons/game_music_emu/bin
+        run: |
+          for target in template_debug template_release; do
+            xcodebuild -create-xcframework \
+              -library libgame_music_emu.ios.$target.arm64.dylib \
+              -output libgame_music_emu.ios.$target.xcframework
+            rm libgame_music_emu.ios.$target.arm64.dylib
+          done
 
       - name: Upload binaries
         uses: actions/upload-artifact@v7
         with:
-          name: game-music-emu-bin-${{ matrix.platform }}
+          name: game-music-emu-bin-${{ matrix.name }}
           path: |
             project/addons/game_music_emu/bin/*.so
             project/addons/game_music_emu/bin/*.dll
             project/addons/game_music_emu/bin/*.dylib
+            project/addons/game_music_emu/bin/*.xcframework
+            project/addons/game_music_emu/bin/*.wasm
 
   package:
     name: Package addon
