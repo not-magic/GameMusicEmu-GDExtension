@@ -47,3 +47,14 @@ Other SCons targets:
 * `scons format` / `scons tidy` run clang-format / clang-tidy
 * `scons docs` regenerates `doc_classes/*.xml` and the wiki pages in `docs/` (needs a `template_debug` build and the flatpak Godot editor)
 
+## License
+
+The code in this repository is released under the [MIT License](LICENSE).
+
+It is built with and links against the following third-party components:
+
+| Component | License | Notes |
+| --- | --- | --- |
+| [Game Music Emu](https://github.com/libgme/game-music-emu) | LGPL 2.1 or later | Compiled into the extension as a static library. |
+| Nuked OPN2 (YM2612 core in Game Music Emu) | LGPL 2.1 or later | Enabled in this build. The GPL-licensed MAME YM2612 core is not used. |
+| [godot-cpp](https://github.com/godotengine/godot-cpp) | MIT | Godot C++ bindings. |
