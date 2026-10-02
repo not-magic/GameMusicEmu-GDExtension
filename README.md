@@ -20,10 +20,12 @@ Drop a file into your project and Godot imports it as an `AudioStreamGME`:
 
 ## Usage
 
-Assign the imported file as the `stream` of an `AudioStreamPlayer`. You can adjust the 
+Assign the imported file as the `stream` of an `AudioStreamPlayer`. You can adjust:
 
 * `parameters/track_index`: zero-based track to play. Some formats are multi-track, so this lets you select what track you want.
 * `parameters/looping`: restart the track when it ends, defaults to true.
+
+These parameters appear in the 'Parameters' section of an `AudioStreamPlayer` and can also be set in code:
 
 ```gdscript
 $AudioStreamPlayer.set("parameters/track_index", 3)
