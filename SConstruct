@@ -16,7 +16,7 @@ env.Append(CPPPATH=["src/"])
 
 # Game Music Emu (game-music-emu/ submodule), built as a static library from
 # the same source list as gme/CMakeLists.txt with every emulator enabled
-# (see gme/gme_types.h), the Nuked YM2612 core, and no zlib (so no VGZ).
+# (see gme/gme_types.h), the Nuked YM2612 core, and no zlib (VGZ is gunzipped by the loader).
 GME_DIR = "game-music-emu/gme"
 env.Append(CPPPATH=["game-music-emu/"])
 # Every Godot target is little-endian; gme headers require it to be stated.

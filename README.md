@@ -11,7 +11,7 @@ Drop a file into your project and Godot imports it as an `AudioStreamGME`:
 | `.nsf`, `.nsfe` | NES / Famicom |
 | `.gbs` | Game Boy |
 | `.spc` | SNES |
-| `.vgm` | Sega and other chips (uncompressed only) |
+| `.vgm`, `.vgz` | Sega and other chips (`.vgz` is gzip-compressed VGM) |
 | `.gym` | Sega Genesis / Mega Drive |
 | `.hes` | PC Engine / TurboGrafx-16 |
 | `.kss` | MSX and other Z80 systems |

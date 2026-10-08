@@ -38,6 +38,7 @@ protected:
 	static void _bind_methods();
 
 public:
+	String find_unsupported_chips() const;
 	std::unique_ptr<Music_Emu> create_emu(long p_sample_rate) const;
 
 	virtual Ref<AudioStreamPlayback> _instantiate_playback() const override;

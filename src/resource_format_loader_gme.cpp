@@ -5,6 +5,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/global_constants.hpp>
 #include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -21,12 +22,17 @@ constexpr FormatEntry format_table[] = {
 	{ "gbs", AudioStreamGME::FORMAT_GBS },
 	{ "spc", AudioStreamGME::FORMAT_SPC },
 	{ "vgm", AudioStreamGME::FORMAT_VGM },
+	{ "vgz", AudioStreamGME::FORMAT_VGM },
 	{ "gym", AudioStreamGME::FORMAT_GYM },
 	{ "hes", AudioStreamGME::FORMAT_HES },
 	{ "kss", AudioStreamGME::FORMAT_KSS },
 	{ "sap", AudioStreamGME::FORMAT_SAP },
 	{ "ay", AudioStreamGME::FORMAT_AY },
 };
+
+bool is_gzip(const PackedByteArray &p_data) {
+	return p_data.size() >= 2 && p_data[0] == 0x1f && p_data[1] == 0x8b;
+}
 
 bool find_format(const String &p_path, AudioStreamGME::Format &r_format) {
 	const String extension = p_path.get_extension().to_lower();
@@ -61,17 +67,33 @@ String ResourceFormatLoaderGME::_get_resource_type(const String &p_path) const {
 Variant ResourceFormatLoaderGME::_load(const String &p_path, const String &p_original_path, bool p_use_sub_threads, int32_t p_cache_mode) const {
 	AudioStreamGME::Format format;
 	if (!find_format(p_path, format)) {
+		UtilityFunctions::push_error("AudioStreamGME: unrecognized file extension: ", p_path);
 		return Variant(static_cast<int>(ERR_FILE_UNRECOGNIZED));
 	}
 
 	const Ref<FileAccess> file = FileAccess::open(p_path, FileAccess::READ);
 	if (file.is_null()) {
+		UtilityFunctions::push_error("AudioStreamGME: cannot open ", p_path);
 		return Variant(static_cast<int>(ERR_FILE_CANT_OPEN));
 	}
 
 	Ref<AudioStreamGME> stream;
 	stream.instantiate();
 	stream->set_format(format);
-	stream->set_data(file->get_buffer(file->get_length()));
+	PackedByteArray data = file->get_buffer(file->get_length());
+	if (is_gzip(data)) {
+		data = data.decompress_dynamic(-1, FileAccess::COMPRESSION_GZIP);
+		if (data.is_empty()) {
+			UtilityFunctions::push_error("AudioStreamGME: failed to gunzip ", p_path);
+			return Variant(static_cast<int>(ERR_FILE_CORRUPT));
+		}
+	}
+	stream->set_data(data);
+
+	const String unsupported_chips = stream->find_unsupported_chips();
+	if (!unsupported_chips.is_empty()) {
+		UtilityFunctions::push_error("AudioStreamGME: cannot import ", p_path, ", it uses unsupported chips: ", unsupported_chips);
+		return Variant(static_cast<int>(ERR_FILE_UNRECOGNIZED));
+	}
 	return stream;
 }

@@ -28,6 +28,45 @@ constexpr long info_sample_rate = 44100;
 constexpr long default_play_length_ms = 150 * 1000;
 constexpr float sample_to_float = 1.0f / 32768.0f;
 
+struct VgmChip {
+	size_t clock_offset;
+	const char *name;
+};
+
+// Chips with a VGM header clock that Vgm_Emu cannot emulate (it only supports SN76489, YM2413 and YM2612).
+constexpr VgmChip unsupported_vgm_chips[] = {
+	{ 0x30, "YM2151" }, { 0x38, "SegaPCM" }, { 0x40, "RF5C68" }, { 0x44, "YM2203" },
+	{ 0x48, "YM2608" }, { 0x4c, "YM2610" }, { 0x50, "YM3812" }, { 0x54, "YM3526" },
+	{ 0x58, "Y8950" }, { 0x5c, "YMF262" }, { 0x60, "YMF278B" }, { 0x64, "YMF271" },
+	{ 0x68, "YMZ280B" }, { 0x6c, "RF5C164" }, { 0x70, "PWM" }, { 0x74, "AY8910" },
+	{ 0x80, "GameBoy DMG" }, { 0x84, "NES APU" }, { 0x88, "MultiPCM" }, { 0x8c, "uPD7759" },
+	{ 0x90, "OKIM6258" }, { 0x98, "OKIM6295" }, { 0x9c, "K051649" }, { 0xa0, "K054539" },
+	{ 0xa4, "HuC6280" }, { 0xa8, "C140" }, { 0xac, "K053260" }, { 0xb0, "Pokey" },
+	{ 0xb4, "QSound" },
+};
+
+uint32_t read_le32(const PackedByteArray &p_data, size_t p_offset) {
+	return static_cast<uint32_t>(p_data[p_offset]) | (static_cast<uint32_t>(p_data[p_offset + 1]) << 8) |
+			(static_cast<uint32_t>(p_data[p_offset + 2]) << 16) | (static_cast<uint32_t>(p_data[p_offset + 3]) << 24);
+}
+
+String find_unsupported_vgm_chips(const PackedByteArray &p_data) {
+	constexpr size_t min_header_size = 0x40;
+	if (static_cast<size_t>(p_data.size()) < min_header_size) {
+		return String();
+	}
+	const uint32_t version = read_le32(p_data, 0x08);
+	const size_t data_start = version >= 0x150 ? 0x34 + read_le32(p_data, 0x34) : min_header_size;
+	String names;
+	for (const VgmChip &chip : unsupported_vgm_chips) {
+		const bool is_in_header = chip.clock_offset + 4 <= data_start && chip.clock_offset + 4 <= static_cast<size_t>(p_data.size());
+		if (is_in_header && (read_le32(p_data, chip.clock_offset) & 0x3fffffff) != 0) {
+			names += (names.is_empty() ? "" : ", ") + String(chip.name);
+		}
+	}
+	return names;
+}
+
 bool is_valid_utf8(const char *p_text) {
 	const unsigned char *byte = reinterpret_cast<const unsigned char *>(p_text);
 	while (*byte) {
@@ -104,6 +143,10 @@ Dictionary make_parameter(const String &p_name, Variant::Type p_type, PropertyHi
 
 // ============================== AudioStreamGME ==============================
 
+String AudioStreamGME::find_unsupported_chips() const {
+	return get_format() == FORMAT_VGM ? find_unsupported_vgm_chips(data) : String();
+}
+
 std::unique_ptr<Music_Emu> AudioStreamGME::create_emu(long p_sample_rate) const {
 	if (data.is_empty()) {
 		return nullptr;
@@ -142,6 +185,7 @@ std::unique_ptr<Music_Emu> AudioStreamGME::create_emu(long p_sample_rate) const 
 			emu = std::make_unique<Ay_Emu>();
 			break;
 		default:
+			UtilityFunctions::push_error("AudioStreamGME: unknown format ", format_id);
 			return nullptr;
 	}
 
@@ -322,9 +366,13 @@ void AudioStreamPlaybackGME::_start(double p_from_pos) {
 			error = emu->seek(static_cast<long>(p_from_pos * 1000.0));
 		}
 		if (error) {
-			UtilityFunctions::push_error("AudioStreamGME: ", String(error));
+			UtilityFunctions::push_error("AudioStreamGME: failed to start track ", playing_track_index, ": ", String(error));
 			emu.reset();
+		} else if (const char *warning = emu->warning()) {
+			UtilityFunctions::push_warning("AudioStreamGME: ", String(warning));
 		}
+	} else if (stream.is_valid()) {
+		UtilityFunctions::push_error("AudioStreamGME: could not create emulator, playback aborted");
 	}
 
 	is_active = emu != nullptr;
